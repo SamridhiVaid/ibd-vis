@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/ibd-vis/static/css/main.975d6789.css",
+    "main.js": "/ibd-vis/static/js/main.f5c4a8d0.js",
+    "index.html": "/ibd-vis/index.html",
+    "main.975d6789.css.map": "/ibd-vis/static/css/main.975d6789.css.map",
+    "main.f5c4a8d0.js.map": "/ibd-vis/static/js/main.f5c4a8d0.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.975d6789.css",
+    "static/js/main.f5c4a8d0.js"
+  ]
+}
