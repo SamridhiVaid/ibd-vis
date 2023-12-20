@@ -28423,22 +28423,21 @@ function calculatePosition(parentId: string, nodes: any) {
 
   // get count of children
   const childrenCount = nodes.length - 1;
-  let firstXPosition = -(childrenCount / 2);
+  const radius = 170; // radius of the circle
 
   nodesCopy.forEach((child: any, index: number) => {
     // Skip the parent node.
     if (index === parentNode) return;
+    // Calculate the angle of each child.
+    let angle = (2 * Math.PI / childrenCount) * (index - 1);
     // Calculate the x position of each child.
-    let x = (firstXPosition + index) * 170;
+    let x = radius * Math.cos(angle);
     // Calculate the y position of each child.
-    let y = 150;
+    let y = radius * Math.sin(angle);
     // Set the position of each child.
     child.position = { x, y };
   });
 
-  // parent needs to be in the middle of the children
-  // nodesCopy[parentNode].position.x = x / 2;
-  // nodesCopy[parentNode].position.y = 0;
   return nodesCopy;
 }
 
