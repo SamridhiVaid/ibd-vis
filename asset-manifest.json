@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/ibd-vis/static/css/main.975d6789.css",
-    "main.js": "/ibd-vis/static/js/main.2b97962a.js",
+    "main.js": "/ibd-vis/static/js/main.30822eba.js",
     "index.html": "/ibd-vis/index.html",
     "main.975d6789.css.map": "/ibd-vis/static/css/main.975d6789.css.map",
-    "main.2b97962a.js.map": "/ibd-vis/static/js/main.2b97962a.js.map"
+    "main.30822eba.js.map": "/ibd-vis/static/js/main.30822eba.js.map"
   },
   "entrypoints": [
     "static/css/main.975d6789.css",
-    "static/js/main.2b97962a.js"
+    "static/js/main.30822eba.js"
   ]
 }
