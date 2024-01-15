@@ -1,4 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
+
+
 import {
   ReactFlow,
   addEdge,
@@ -8,18 +12,21 @@ import {
   type Edge,
   type Node,
 } from '@reactflow/core';
-
 import CustomNode from './CustomNode';
+
+
+
 
 // this is important! You need to import the styles from the lib to make it work
 import '@reactflow/core/dist/style.css';
 
 import './Flow.css';
 
+
+
 const nodeTypes = {
   custom: CustomNode,
 };
-
 const position = { x: 0, y: 0 };
 
 const initialNodes = [
@@ -28418,12 +28425,19 @@ function calculatePosition(parentId: string, nodes: any) {
   // Set parent node to the top.
   let parentNode = nodesCopy.findIndex((node: any) => node.id === parentId);
 
-  // Fix parent position to 0,0.
-  nodesCopy[parentNode].position = { x: 0, y: 0 };
+  // Ensure parentNode is not -1 before trying to set its position
+  if (parentNode !== -1) {
+    // Fix parent position to 0,0.
+    nodesCopy[parentNode].position = { x: 0, y: 0 };
+  } else {
+    // parentId not found in nodes, handle error...
+    console.error(`parentId ${parentId} not found in nodes`);
+    return nodesCopy;
+  }
 
   // get count of children
   const childrenCount = nodes.length - 1;
-  const radius = 170; // radius of the circle
+  const radius = 300; // radius of the circle
 
   nodesCopy.forEach((child: any, index: number) => {
     // Skip the parent node.
@@ -28469,8 +28483,9 @@ function calculatePosition(parentId: string, nodes: any) {
 // 
 
 function Flow() {
-
-  const [activeNode, setActiveNode] = useState<String | null>(null);
+  const [currentNodeIndex, setCurrentNodeIndex] = useState(0);
+  //const [activeNode, setActiveNode] = useState<String | null>(null);
+  const [activeNode, setActiveNode] = useState<string | null>(null);
   const [currentData, setCurrentData] = useState<any>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -28479,11 +28494,45 @@ function Flow() {
     [setEdges]
   );
 
-  function onNodeClick(event: any, node: Node<any, string | undefined>): void {
 
-    console.log("node clicked");
-    // replace the nodes and edges
-    const nodeId: string = node.id;
+  // Maintain map of node id to previous node id.
+  const [previousNodesMap, setPreviousNodesMap] = useState<any>({}); // {nodeId: previousNodeId}
+
+  useEffect(() => {
+    // Remove the update of previousNodesMap from here
+  }, [activeNode]);
+  
+  const backToPreviousNode = () => {
+    if (activeNode == null) {
+      return;
+    }
+    const previousNodeId = previousNodesMap[activeNode];
+    if (previousNodeId !== undefined) {
+      // Update the activeNode state
+      setActiveNode(previousNodeId);
+  
+      // Update other states as needed
+      const previousNodeIndex = nodes.findIndex(node => node.id === previousNodeId);
+      setCurrentNodeIndex(previousNodeIndex);
+  
+      const previousNodeData = t[previousNodeId as keyof typeof t];
+      setCurrentData(previousNodeData);
+  
+      // Call the updateData function to update the nodes and edges states
+      updateData(previousNodeId, true);
+    }
+  }
+
+  function onNodeClick(event: any, node: Node<any, string | undefined>): void {
+    updateData(node.id as string);
+  }
+
+  const updateData = (nodeId: string, isBack: boolean = false) => {
+
+    // if the node is already active, do nothing
+    if (nodeId === activeNode) {
+      return;
+    }
 
     const updatedNodes = [];
     if (processedNodesIdx[nodeId] !== undefined) {
@@ -28498,23 +28547,28 @@ function Flow() {
 
     const updatedEdges: any[] = [];
 
-    if (processedEdgesIdx[node.id] !== undefined) {
-      processedEdgesIdx[node.id].forEach((idx: any) => {
+    if (processedEdgesIdx[nodeId] !== undefined) {
+      processedEdgesIdx[nodeId].forEach((idx: any) => {
         let new_edge = { ...initialEdges[idx] };
         new_edge.hidden = false;
         updatedEdges.push(new_edge);
       });
     }
 
+    // If not from back.
+    if (!isBack) {
+      // Update the previousNodesMap
+      let newPreviousNodesMap = { ...previousNodesMap };
+      // Add the current node to the map.
+      newPreviousNodesMap[nodeId] = activeNode;
+      setPreviousNodesMap(newPreviousNodesMap);
+    }
+
     // keep the clicked node and edge in the updatedEdges and updatedNodes
-    updatedNodes.push(nodesByIdx[nodeId]);
-    updatedNodes[updatedNodes.length - 1].hidden = false;
-
-    // print the updatedNodes and updatedEdges
-    console.log(updatedNodes);
-    console.log(updatedEdges);
-
-    console.log("data:", t[nodeId as keyof typeof t]);
+    if (nodesByIdx[nodeId] !== undefined) {
+      updatedNodes.push(nodesByIdx[nodeId]);
+      updatedNodes[updatedNodes.length - 1].hidden = false;
+    }
     setActiveNode(nodeId);
     setCurrentData(t[nodeId as keyof typeof t]);
 
@@ -28522,37 +28576,63 @@ function Flow() {
     setEdges(updatedEdges);
   }
 
-  const formatTooltipData = (data: any) => {
+  const formatTooltipData = (nodeId: string, data: any) => {
     // data is in the form of {ICDs: 1, community_patients: 2, size: 3}
     // return as three lines div with the data
     // ICDs is array so format accordingly.
-    return <div>
-      <div>ICDs: {data.ICDs.map((icd: any) => <div>{icd}</div>)}</div><br/>
-      <div>Community Patients: {data.community_patients}</div><br/>
-    <div>Size: {data.size}</div>
-    </div >
+      // Find all edges where the source is the current node
+  const childEdges = edges.filter(edge => edge.source === nodeId);
 
-    // return <div>{data.ICDs}<br />{data.community_patients}<br />{data.size}</div>
+  // Find the corresponding nodes for these edges
+  const childNodes = childEdges.map(edge => nodes.find(node => node.id === edge.target));
+
+  // Get the names of the child nodes
+  const childNodeNames = childNodes.map(node => node?.data.label).join(', ');
+    return <div>
+      <div>ICDs: {data.ICDs ? data.ICDs.map((icd: any) => <div>{icd}</div>) : 'N/A'}</div><br />
+      <div>Community Patients: {data.community_patients}</div><br />
+      <div>Size: {data.size}</div>
+      <div>Children: {childNodeNames}</div>
+    </div >
   }
 
-
-return (
-  <div className="Flow">
-    <ReactFlow
-      nodes={nodes.map(node => node.id === activeNode ?
-        { ...node, data: { ...node.data, label: <div>{node.data.label}<div className="tooltip"> {currentData ? formatTooltipData(currentData) : ""} </div></div> } } :
-        node)}
-      onNodesChange={onNodesChange}
-      edges={edges}
-      onEdgesChange={onEdgesChange}
-      onConnect={onConnect}
-      onNodeClick={onNodeClick}
-      snapToGrid={true}
-      fitView
-      nodeTypes={nodeTypes}
-    />
-  </div>
-);
-}
+  return (
+    <Router>
+      <div className="Flow">
+        <>
+        <button onClick={backToPreviousNode}>
+          Go Back
+        </button>
+        </>
+        <ReactFlow
+          nodes={nodes.map(node => {
+            const nodeData = t[node.id as keyof typeof t];
+            const tooltipData = nodeData ? formatTooltipData(node.id, nodeData) : "";
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                label: (
+                  <div>
+                    {node.data.label}
+                    <div className="tooltip">{tooltipData}</div>
+                  </div>
+                ),
+              },
+            };
+          })}
+          onNodesChange={onNodesChange}
+          edges={edges}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onNodeClick={onNodeClick}
+          snapToGrid={true}
+          fitView
+          nodeTypes={nodeTypes}
+        />
+      </div>
+    </Router>
+  );
+};
 
 export default Flow;
