@@ -18,7 +18,7 @@ def convert_data_to_react_format(node, prefix='', id=0):
     nodes = {}
     edges = []
     node_id = str(id)
-    nodes[node_id] = { 'size': node.size, 'community_patients': node.community_patients, 'ICDs': node.ICDs}
+    nodes[node_id] = { 'size': node.size, 'community_patients': node.community_patients, 'ICDs': node.ICDs, 'Children': [prefix + char for char in node.children.keys()]  }
     for char, child in node.children.items():
         child_id = str(id + 1)
         edges.append({'id': f"{node_id}->{child_id}", 'source': node_id, 'target': child_id, 'hidden': True})
@@ -41,4 +41,6 @@ pprint.pprint(initialNodes)
 #python3 text.py /log2<initialNodes.txt
 
 #save initial edges in log
+
+#python3 text.py > log &2>1  
 
