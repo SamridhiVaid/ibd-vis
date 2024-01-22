@@ -12,7 +12,8 @@
 
 .tooltip {
   position: absolute;
-  left: -50px; /* Adjust this value to position the tooltip */
+  left: -50px;
+  /* Adjust this value to position the tooltip */
   bottom: 40px;
   background-color: #f9f9f9;
   color: black;
@@ -22,4 +23,31 @@
   z-index: 1;
   font-size: 0.6em;
   line-height: 1;
+}
+
+
+.back-btn-position {
+  /* absolute move to the right */
+  left: 10px;
+  /* middle */
+  padding: 20px;
+  /* position */
+  position: fixed;
+  z-index: 100000;
+  /* center vertically */
+  top: 50vh; 
+  /* position */
+  font-size: 2em;
+  /* semi bold */
+  font-weight: 600;
+  /* rounded */
+  border-radius: 10px;
+  /* some nicer color */
+  background-color: #5c0dc4;
+  /* text color white */
+  color: white;
+  /* no border */
+  border: none;
+  /* capitalize */
+  text-transform: uppercase;
 }
