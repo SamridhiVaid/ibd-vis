@@ -15,21 +15,23 @@ class Node:
             total += child.compute_total_community_patients()
         return total
     
-    def count_children_in_subtree(self):
-        count = len(self.children)
+    
+    def compute_total_ICD_codes(self):
+        total = len(self.ICDs)
         for child in self.children.values():
-            count += child.count_children_in_subtree()
-        return count
+            total += child.compute_total_ICD_codes()
+        return total
 
     def print_node(self):
-        total_community_patients = self.compute_total_community_patients()  # Fix: Add this line to compute the total community patients
-        total_children_count = self.count_children_in_subtree()  # Fix: Add this line to compute the total children count
+        total_community_patients = self.compute_total_community_patients()  # computes the total community patients
+        total_children_count = self.count_children_in_subtree()  # computes the total children count
+        total_ICD_codes = self.compute_total_ICD_codes()
         print(f"Size: {self.size}")
         print(f"Community Patients: {self.community_patients}")
         print(f"ICDs: {self.ICDs}")
         print(f"Children: {list(self.children.keys())}")
         print(f"Total Community Patients in Subtree: {total_community_patients}")
-        print(f"Total Children Count in Subtree: {total_children_count}")
+        print(f"Total ICD Codes in Subtree: {total_ICD_codes}") 
 
 
 
@@ -37,7 +39,7 @@ def convert_data_to_react_format(node, prefix='', id=0):
     nodes = {}
     edges = []
     node_id = str(id)
-    nodes[node_id] = { 'size': node.size, 'community_patients': node.community_patients, 'ICDs': node.ICDs, 'Children': [prefix + char for char in node.children.keys()],'totalChildrenInSubtree': node.count_children_in_subtree(), 'totalCommunityPatients': node.compute_total_community_patients() }
+    nodes[node_id] = { 'size': node.size, 'community_patients': node.community_patients, 'ICDs': node.ICDs, 'Children': [prefix + char for char in node.children.keys()], 'totalCommunityPatients': node.compute_total_community_patients(),'totalICDCodes': node.compute_total_ICD_codes() }
     for char, child in node.children.items():
         child_id = str(id + 1)
         edges.append({'id': f"{node_id}->{child_id}", 'source': node_id, 'target': child_id, 'hidden': True})
