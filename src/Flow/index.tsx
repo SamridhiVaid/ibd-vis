@@ -89542,17 +89542,17 @@ function Flow() {
       return;
     }
     const previousNodeId = previousNodesMap[activeNode];
-    if (previousNodeId !== undefined) {
+    if (previousNodeId !== undefined && previousNodeId !== null) {
       // Update the activeNode state
       setActiveNode(previousNodeId);
-
+  
       // Update other states as needed
       const previousNodeIndex = nodes.findIndex(node => node.id === previousNodeId);
       setCurrentNodeIndex(previousNodeIndex);
-
+  
       const previousNodeData = t[previousNodeId as keyof typeof t];
       setCurrentData(previousNodeData);
-
+  
       // Call the updateData function to update the nodes and edges states
       updateData(previousNodeId, true);
     }
